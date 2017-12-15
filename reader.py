@@ -1,6 +1,6 @@
 # reader.py
 # author: loriex
-# time: 23:02 2017-12-15
+# time: 23:26 2017-12-15
 
 #
 #input = reader.ReadAll(path)
@@ -125,15 +125,15 @@ class PngReader():
             i = i % self.total
         T = PngMat()
         path = self.filepath + self.filelist[i]
-        #print(path)
+        print(path)
         img = Image.open(path)
-        img = ClearNoise.pre_image(img) #image_denoising
+        #img = ClearNoise.pre_image(img) #image_denoising
         img = img.resize((width, height))
         img = image_binarize(img)
         T.width = img.size[0]
         T.height = img.size[1]
         T.img = img
-        T.plaintext = self.filelist[i][0:4]
+        T.plaintext = self.filelist[i][-8:-4]#.png
         return T
 
 
@@ -159,7 +159,8 @@ class dongzj:
         if idx >= self.total_numbers:
             id = idx % self.total_numbers
         T = self.mreader.get(idx, width, height)
-
+        print(T.plaintext)
+        print("----------------------")
         x = [0 for i in range(width * height)]
         for i in range(height):
             for j in range(width):
@@ -205,10 +206,10 @@ def ReadAll(path):
 if __name__ == '__main__':
     width = 64
     height = 40
-    input = ReadAll("./ndata")
-    x, y = input.getbatch(1, 1, width, height, "FULL")
+    input = ReadAll("./num_nonoise_data")
+    x, y = input.getbatch(1, 10, width, height, "FULL")
     print(input.total_numbers)
     print(y[0])
-    for i in range(1):
+    for i in range(4):
         showImg(x[i], width, height)
 #usage over

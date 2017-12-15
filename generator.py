@@ -73,7 +73,7 @@ def add_noise_curve(img, color=-1):
 #-----------------------------now we go to generate a captcha------------------------------------
 #------------------------------------------------------------------------------------------------
 # random_str is the captcha's plaintext
-number = 10000
+number = 5000
 for num in range(0, number):
     random_str = ''
     for i in range(0, 4):
@@ -86,8 +86,9 @@ for num in range(0, number):
     #for i in range(1, 5):
     #    add_noise_dots(img, color)
 
-    img.save("./ndata/"+random_str+str(num)+'.png', format='png')
-#    plt.title(random_str)
-#    plt.imshow(img)
-#    plt.savefig("./ndata/"+random_str+str(num), format='png', dpi=300)
-#    plt.clf()
+    img.save("./all_withnoise_data/"+str(num)+random_str+'.png', format='png')
+    #plt.title(random_str)
+    #plt.imshow(img)
+    #plt.show()
+    #plt.savefig("./sdata/"+random_str+str(num), format='png', dpi=300)
+    #plt.clf()
