@@ -169,7 +169,7 @@ class dongzj:
                 x[i*height+j] = T.img.getpixel((i,j))
 
         size = 0
-        if flags == "NULL":
+        if flags == "FULL":
             size = 10+26*2
         if flags == "ONLY_NUMBERS":
             size = 10
