@@ -2,6 +2,7 @@
 # author: loriex
 # time: 21:39 2017-12-14
 
+#
 #input = reader.ReadAll(path)
 #	读取path下面所有的图片，返回一个类，支持以下方法：
 #	input.total_numbers
@@ -11,7 +12,8 @@
 #		x是一个[120*80]的一维列表。
 #		y是一个[4*(10+26*2)]的列表，对应四个答案。这是一个只有四个1的0/1向量
 #
-#	X_batch, Y_batch = input.getbatch(i, BATCH_SIZE)
+#	X_batch, Y_batch = getbatch(i, BATCH_SIZE, width, height, flags)
+# flags = "ONLY_NUMBERS" ==> Y only care numbers
 #		i从0开始
 #		读入第[i * BATCHSIZE, (i+1)*BATCHSIZE）的图片
 #		X_batch是一个[BATCHSIZE, 120*80]的二维列表
@@ -128,8 +130,8 @@ class PngReader():
         path = self.filepath + self.filelist[i]
         #print(path)
         img = Image.open(path)
+        #img = ClearNoise.pre_image(img) #image_denoising
         img = img.resize((width, height))
-        img = ClearNoise.pre_image(img) #image_denoising
         img = image_binarize(img)
         T.width = img.size[0]
         T.height = img.size[1]
@@ -156,7 +158,7 @@ class dongzj:
         for i in range(ord('a'), ord('z')+1):
             self.table[i] = cnt
             cnt = cnt + 1
-    def getone(self, idx, width = 120, height = 80):
+    def getone(self, idx, width = 64, height = 40, flags="FULL"):
         if idx >= self.total_numbers:
             id = idx % self.total_numbers
         T = self.mreader.get(idx, width, height)
@@ -166,32 +168,48 @@ class dongzj:
             for j in range(height):
                 x[i*height+j] = T.img.getpixel((i,j))
 
-        y = [0 for i in range(4*(10+26*2))]
+        size = 0
+        if flags == "NULL":
+            size = 10+26*2
+        if flags == "ONLY_NUMBERS":
+            size = 10
+        y = [0 for i in range(4*size)]
         for i in range(4):
             charact = T.plaintext[i]
             offset = self.table[ord(charact)]
-            y[i * (10+26*2) + offset] = 1
+            y[i * size + offset] = 1
 
         return x, y
 
-    def getbatch(self, id, BATCH_SIZE):
+    def getbatch(self, id, BATCH_SIZE, width = 64, height = 40, flags="FULL"):
         x = [[] for i in range(BATCH_SIZE)]
         y = [[] for i in range(BATCH_SIZE)]
         id = id * BATCH_SIZE
         for i in range(0, BATCH_SIZE):
             id = id % self.total_numbers
-            x[i], y[i] = self.getone(id)
+            x[i], y[i] = self.getone(id, width, height, flags)
             id = id + 1
         return x, y
+
+def showImg(imglist, width = 64, height = 40):
+    img = Image.new('RGB', (width, height))
+    for i in range(width):
+        for j in range(height):
+            img.putpixel((i,j), (imglist[i*height+j]*255,imglist[i*height+j]*255,imglist[i*height+j]*255))
+
+    plt.title("oh my god")
+    plt.imshow(img)
+    plt.show()
 
 def ReadAll(path):
     res = dongzj(path)
     return res
 # usage example:
 if __name__ == '__main__':
-    input = ReadAll("./ndata")
-    x, y = input.getbatch(1, 2)
+    input = ReadAll("./numdata")
+    x, y = input.getbatch(1, 2, 64, 40, "ONLY_NUMBERS")
     print(input.total_numbers)
     print(y[0])
     print(y[1])
+    #showImg(x[0], 64, 40)
 #usage over
