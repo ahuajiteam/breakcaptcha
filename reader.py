@@ -1,6 +1,6 @@
 # reader.py
 # author: loriex
-# time: 21:39 2017-12-14
+# time: 23:02 2017-12-15
 
 #
 #input = reader.ReadAll(path)
@@ -82,9 +82,6 @@ def image_binarize(img):
     #img = img.convert('RGB')
     return img
 
-def image_denoising(img):
-    return img
-
 class PngMat:
     width = -1
     height = -1
@@ -130,7 +127,7 @@ class PngReader():
         path = self.filepath + self.filelist[i]
         #print(path)
         img = Image.open(path)
-        #img = ClearNoise.pre_image(img) #image_denoising
+        img = ClearNoise.pre_image(img) #image_denoising
         img = img.resize((width, height))
         img = image_binarize(img)
         T.width = img.size[0]
@@ -164,9 +161,9 @@ class dongzj:
         T = self.mreader.get(idx, width, height)
 
         x = [0 for i in range(width * height)]
-        for i in range(width):
-            for j in range(height):
-                x[i*height+j] = T.img.getpixel((i,j))
+        for i in range(height):
+            for j in range(width):
+                x[i*width+j] = T.img.getpixel((j,i))
 
         size = 0
         if flags == "FULL":
@@ -193,9 +190,9 @@ class dongzj:
 
 def showImg(imglist, width = 64, height = 40):
     img = Image.new('RGB', (width, height))
-    for i in range(width):
-        for j in range(height):
-            img.putpixel((i,j), (imglist[i*height+j]*255,imglist[i*height+j]*255,imglist[i*height+j]*255))
+    for i in range(height):
+        for j in range(width):
+            img.putpixel((j,i), (imglist[i*width+j]*255,imglist[i*width+j]*255,imglist[i*width+j]*255))
 
     plt.title("oh my god")
     plt.imshow(img)
@@ -206,10 +203,12 @@ def ReadAll(path):
     return res
 # usage example:
 if __name__ == '__main__':
-    input = ReadAll("./numdata")
-    x, y = input.getbatch(1, 2, 64, 40, "ONLY_NUMBERS")
+    width = 64
+    height = 40
+    input = ReadAll("./ndata")
+    x, y = input.getbatch(1, 1, width, height, "FULL")
     print(input.total_numbers)
     print(y[0])
-    print(y[1])
-    #showImg(x[0], 64, 40)
+    for i in range(1):
+        showImg(x[i], width, height)
 #usage over
