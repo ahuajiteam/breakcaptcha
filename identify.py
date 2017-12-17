@@ -12,8 +12,8 @@ SKIP_STEP = 100
 N_EPOCHS = 100
 HEIGHT = 80
 WIDTH = 120
-TrainingDataPath = r'Data/debugdata' #modify here
-TestingDataPath = r'Data/testdebugdata' #modify here
+TrainingDataPath = r'Data/num_nonoise_data' #modify here
+TestingDataPath = r'Data/num_nonoise_data_test' #modify here
 import utils
 
 class CNN:
@@ -25,7 +25,7 @@ class CNN:
         self.width = width
         self.global_step = tf.Variable(0, dtype = tf.int32, trainable = False)
         self.DROPOUT = 0.95
-        self.ckptdir = r'checkpoints\fordebug' #modify here
+        self.ckptdir = r'checkpoints\for_num_nonoise_data' #modify here
 
         self.X = tf.placeholder(tf.float32, [None, self.height * self.width])
         self.Y = tf.placeholder(tf.float32, [None, self.n_length * self.n_classes])
@@ -74,7 +74,7 @@ class CNN:
 
 
 def train_model(model, data_path, batch_size=BATCH_SIZE, n_epochs=N_EPOCHS, skip_step=SKIP_STEP):
-    input = reader.ReadAll(data_path) 
+    input = reader.ReadAll(data_path, model.width, model.height) 
     batch_size = min(batch_size, input.total_numbers)
     if (os.path.exists(model.ckptdir) == False):
         os.makedirs(model.ckptdir)
@@ -95,7 +95,7 @@ def train_model(model, data_path, batch_size=BATCH_SIZE, n_epochs=N_EPOCHS, skip
         # print (initial_step)
 
         for i in range(initial_step, n_batches * n_epochs):
-            X_batch, Y_batch = input.getbatch(i, batch_size, model.width, model.height, "ONLY_NUMBERS")
+            X_batch, Y_batch = input.getbatch(i, batch_size, "ONLY_NUMBERS")
             _, loss_batch = sess.run([model.optimizer, model.loss],
                                      feed_dict={model.X: X_batch, model.Y: Y_batch, model.dropout: model.DROPOUT})
             total_loss += loss_batch
@@ -114,7 +114,7 @@ def train_model(model, data_path, batch_size=BATCH_SIZE, n_epochs=N_EPOCHS, skip
         print("Total time: {0} seconds".format(time.time() - start_time))
 
 def test_model(model, data_path):
-    input = reader.ReadAll(data_path) ##need modify
+    input = reader.ReadAll(data_path, model.width, model.height) 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         saver = tf.train.Saver()
@@ -125,7 +125,7 @@ def test_model(model, data_path):
             print ("checkpoint not found")
             exit(1)
 
-        batch_x_test, batch_y_test = input.getbatch(0, input.total_numbers, model.width, model.height, "ONLY_NUMBERS")
+        batch_x_test, batch_y_test = input.getbatch(0, input.total_numbers, "ONLY_NUMBERS")
         preds = sess.run(model.output, feed_dict={model.X: batch_x_test, model.Y: batch_y_test, model.dropout: 1.0})
 
         preds = tf.argmax(tf.reshape(preds, [-1, model.n_length, model.n_classes]), 2)
