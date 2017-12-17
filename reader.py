@@ -1,13 +1,13 @@
 # reader.py
 # author: loriex
-# time: 23:26 2017-12-15
+# time: 13:13 2017-12-17
 
 #
 #input = reader.ReadAll(path)
 #	读取path下面所有的图片，返回一个类，支持以下方法：
 #	input.total_numbers
 #		图片总数
-#	x, y = input.getone(i)
+#	x, y = input.getone(i) 
 #		第i张图片 （从0开始）
 #		x是一个[120*80]的一维列表。
 #		y是一个[4*(10+26*2)]的列表，对应四个答案。这是一个只有四个1的0/1向量
@@ -95,9 +95,12 @@ class PngMat:
 class PngReader():
     filepath = ""
     filelist = []
+    imglist = []
+    mwidth = 0
+    mheight = 0
     total = 0
     index = 0
-    def __init__(self, path):
+    def __init__(self, path, width, height):
         if path[len(path)-1] == '/':
             self.filepath = path
         else:
@@ -105,34 +108,36 @@ class PngReader():
         self.filelist.clear()
         self.total = 0
         self.index = 0
+        self.mwidth = width
+        self.mheight = height
 
         dirs = os.listdir(path)
         for allDir in dirs:
             if allDir.endswith(".png"):
                 self.total = self.total + 1
                 self.filelist.append(allDir)
+                img = Image.open(self.filepath + allDir)
+                # img = ClearNoise.pre_image(img) #image_denoising
+                img = img.resize((width, height))
+                img = image_binarize(img)
+                self.imglist.append(img)
                 #child = os.path.join('%s%s' % (self.filepath, allDir))
                 #print(child)
 
         if self.total == 0:
             print("no png found...\n")
-
+        print("png read finished..")
     def empty(self):
         return self.index == self.total
 
-    def get(self, i, width, height):
+    def get(self, i):
         if i >= self.total:
             i = i % self.total
         T = PngMat()
-        path = self.filepath + self.filelist[i]
-        print(path)
-        img = Image.open(path)
-        #img = ClearNoise.pre_image(img) #image_denoising
-        img = img.resize((width, height))
-        img = image_binarize(img)
-        T.width = img.size[0]
-        T.height = img.size[1]
-        T.img = img
+        #print(path)
+        T.width = self.mwidth
+        T.height = self.mheight
+        T.img = self.imglist[i]
         T.plaintext = self.filelist[i][-8:-4]#.png
         return T
 
@@ -140,10 +145,14 @@ class PngReader():
 class dongzj:
     total_numbers = 0
     mreader = 0
+    mwidth = 0
+    mheight = 0
     table = {}
-    def __init__(self, path):
-        self.mreader = PngReader(path)
+    def __init__(self, path, width, height):
+        self.mreader = PngReader(path, width, height)
         self.total_numbers = self.mreader.total
+        self.mwidth = width
+        self.mheight = height
         # make a offset table
         cnt = 0
         for i in range(ord('0'), ord('9')+1):
@@ -155,15 +164,15 @@ class dongzj:
         for i in range(ord('a'), ord('z')+1):
             self.table[i] = cnt
             cnt = cnt + 1
-    def getone(self, idx, width = 64, height = 40, flags="FULL"):
+    def getone(self, idx, flags="FULL"):
         if idx >= self.total_numbers:
             id = idx % self.total_numbers
-        T = self.mreader.get(idx, width, height)
-        print(T.plaintext)
-        print("----------------------")
+        T = self.mreader.get(idx)
+        #print(T.plaintext)
+        #print("----------------------")
         x = [0 for i in range(width * height)]
-        for i in range(height):
-            for j in range(width):
+        for i in range(self.mheight):
+            for j in range(self.mwidth):
                 x[i*width+j] = T.img.getpixel((j,i))
 
         size = 0
@@ -179,13 +188,13 @@ class dongzj:
 
         return x, y
 
-    def getbatch(self, id, BATCH_SIZE, width = 64, height = 40, flags="FULL"):
+    def getbatch(self, id, BATCH_SIZE, flags="FULL"):
         x = [[] for i in range(BATCH_SIZE)]
         y = [[] for i in range(BATCH_SIZE)]
         id = id * BATCH_SIZE
         for i in range(0, BATCH_SIZE):
             id = id % self.total_numbers
-            x[i], y[i] = self.getone(id, width, height, flags)
+            x[i], y[i] = self.getone(id, flags)
             id = id + 1
         return x, y
 
@@ -199,15 +208,15 @@ def showImg(imglist, width = 64, height = 40):
     plt.imshow(img)
     plt.show()
 
-def ReadAll(path):
-    res = dongzj(path)
+def ReadAll(path, width, height):
+    res = dongzj(path, width, height)
     return res
 # usage example:
 if __name__ == '__main__':
     width = 64
     height = 40
-    input = ReadAll("./num_nonoise_data")
-    x, y = input.getbatch(1, 10, width, height, "FULL")
+    input = ReadAll("./Data/num_nonoise_data", width, height)
+    x, y = input.getbatch(1, 10, "FULL")
     print(input.total_numbers)
     print(y[0])
     for i in range(4):
