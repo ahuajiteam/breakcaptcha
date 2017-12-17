@@ -8,11 +8,11 @@ from tensorflow.examples.tutorials.mnist import input_data
 N_CLASSES = 10
 LEARNING_RATE = 0.001
 BATCH_SIZE = 128
-SKIP_STEP = 100
-MAX_STEP = 4000
+SKIP_STEP = 25
+MAX_STEP = 10000
 HEIGHT = 80
 WIDTH = 120
-TEST_BATCH_SIZE = 200
+TEST_BATCH_SIZE = 100
 TrainingDataPath = r'Data/num_nonoise_data' #modify here
 TestingDataPath = r'Data/num_nonoise_data_test' #modify here
 # import utils
@@ -108,7 +108,7 @@ def train_model(model, batch_size=BATCH_SIZE, Test_batch_size=TEST_BATCH_SIZE, s
                 preds = tf.argmax(tf.reshape(preds, [-1, model.n_length, model.n_classes]), 2)
                 y = tf.argmax(tf.reshape(batch_y_test, [-1, model.n_length, model.n_classes]), 2)
                 correct_pred = tf.equal(y, preds).eval()
-                print (correct_pred)
+                # print (correct_pred)
                 for i in range(Test_batch_size):
                     acc += 1
                     for j in range(4):
@@ -144,4 +144,4 @@ def train_model(model, batch_size=BATCH_SIZE, Test_batch_size=TEST_BATCH_SIZE, s
 
 if __name__ == '__main__':
     model = CNN(N_CLASSES, LEARNING_RATE, HEIGHT, WIDTH)
-    train_model(model, 5, 5)
+    train_model(model)
