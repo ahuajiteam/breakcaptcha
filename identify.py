@@ -132,7 +132,7 @@ def test_model(model, data_path):
         acc = 0
         max_index = int(input.total_numbers / Test_batch_size)
         for index in range(max_index):
-            batch_x_test, batch_y_test = input.getbatch(0, Test_batch_size, "ONLY_NUMBERS")
+            batch_x_test, batch_y_test = input.getbatch(index, Test_batch_size, "ONLY_NUMBERS")
             preds = sess.run(model.output, feed_dict={model.X: batch_x_test, model.Y: batch_y_test, model.dropout: 1.0})
 
             preds = tf.argmax(tf.reshape(preds, [-1, model.n_length, model.n_classes]), 2)
@@ -147,6 +147,7 @@ def test_model(model, data_path):
                         acc -= 1
                         break
 
+        print ('total_numbers = {}'.format((max_index * Test_batch_size)))
         print("Accuracy on {} {:5.6f}".format(data_path, acc / (max_index * Test_batch_size)))    
 
 # def test_one(X):
@@ -171,6 +172,7 @@ def test_model(model, data_path):
 
 if __name__ == '__main__':
     model = CNN(N_CLASSES, LEARNING_RATE, HEIGHT, WIDTH)
-    train_model(model, TrainingDataPath)
+    # train_model(model, TrainingDataPath)
+    test_model(model, TestingDataPath)
     test_model(model, TrainingDataPath)
     test_model(model, TestingDataPath)
