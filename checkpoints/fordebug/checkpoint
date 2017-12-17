@@ -1,0 +1,2 @@
+model_checkpoint_path: "identify-convnet-99"
+all_model_checkpoint_paths: "identify-convnet-99"
