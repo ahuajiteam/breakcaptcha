@@ -102,7 +102,7 @@ def train_model(model, data_path, batch_size=BATCH_SIZE, n_epochs=N_EPOCHS, skip
             print('loss at step {}: {:5.6f}'.format(i + 1, loss_batch))
 
             if (i + 1) % skip_step == 0:
-                batch_x_test, batch_y_test = input.getbatch(i + 1, min(100, input.total_numbers), model.width, model.height, "ONLY_NUMBERS")
+                batch_x_test, batch_y_test = input.getbatch(i + 1, min(100, input.total_numbers), "ONLY_NUMBERS")
                 acc = sess.run(model.accuracy, feed_dict={model.X: batch_x_test, model.Y: batch_y_test, model.dropout: 1.})
                 print('Average loss at step {}: {:5.6f}, Accuracy of all numbers = {}'.format(i + 1, total_loss / skip_step, acc))
                 total_loss = 0.0
