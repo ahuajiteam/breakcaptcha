@@ -1,13 +1,13 @@
 # reader.py
 # author: loriex
-# time: 13:13 2017-12-17
+# time: 13:45 2017-12-17
 
 #
 #input = reader.ReadAll(path)
 #	读取path下面所有的图片，返回一个类，支持以下方法：
 #	input.total_numbers
 #		图片总数
-#	x, y = input.getone(i) 
+#	x, y = input.getone(i)
 #		第i张图片 （从0开始）
 #		x是一个[120*80]的一维列表。
 #		y是一个[4*(10+26*2)]的列表，对应四个答案。这是一个只有四个1的0/1向量
@@ -170,7 +170,7 @@ class dongzj:
         T = self.mreader.get(idx)
         #print(T.plaintext)
         #print("----------------------")
-        x = [0 for i in range(width * height)]
+        x = [0 for i in range(self.mwidth * self.mheight)]
         for i in range(self.mheight):
             for j in range(self.mwidth):
                 x[i*width+j] = T.img.getpixel((j,i))
