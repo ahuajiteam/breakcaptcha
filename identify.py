@@ -125,23 +125,29 @@ def test_model(model, data_path):
             print ("checkpoint not found")
             exit(1)
 
-        batch_x_test, batch_y_test = input.getbatch(0, input.total_numbers, "ONLY_NUMBERS")
-        preds = sess.run(model.output, feed_dict={model.X: batch_x_test, model.Y: batch_y_test, model.dropout: 1.0})
+        Test_batch_size = min(input.total_numbers, 100)
+        if (input.total_numbers % Test_batch_size != 0):
+            print ("some of the data are not tested")
 
-        preds = tf.argmax(tf.reshape(preds, [-1, model.n_length, model.n_classes]), 2)
-        y = tf.argmax(tf.reshape(batch_y_test, [-1, model.n_length, model.n_classes]), 2)
-        correct_pred = tf.equal(y, preds).eval()
-        # print (correct_pred)
-        
         acc = 0
-        for i in range(input.total_numbers):
-            acc += 1
-            for j in range(4):
-                if (correct_pred[i][j] != True):
-                    acc -= 1
-                    break
+        max_index = int(input.total_numbers / Test_batch_size)
+        for index in range(max_index):
+            batch_x_test, batch_y_test = input.getbatch(0, Test_batch_size, "ONLY_NUMBERS")
+            preds = sess.run(model.output, feed_dict={model.X: batch_x_test, model.Y: batch_y_test, model.dropout: 1.0})
 
-        print("Accuracy on {} {:5.6f}".format(data_path, acc / input.total_numbers))    
+            preds = tf.argmax(tf.reshape(preds, [-1, model.n_length, model.n_classes]), 2)
+            y = tf.argmax(tf.reshape(batch_y_test, [-1, model.n_length, model.n_classes]), 2)
+            correct_pred = tf.equal(y, preds).eval()
+            # print (correct_pred)
+            
+            for i in range(Test_batch_size):
+                acc += 1
+                for j in range(4):
+                    if (correct_pred[i][j] != True):
+                        acc -= 1
+                        break
+
+        print("Accuracy on {} {:5.6f}".format(data_path, acc / (max_index * Test_batch_size)))    
 
 # def test_one(X):
 #     model = CNN(N_CLASSES, LEARNING_RATE, HEIGHT, WIDTH)
