@@ -115,8 +115,8 @@ def train_model(model, batch_size=BATCH_SIZE, Test_batch_size=TEST_BATCH_SIZE, s
                         if (correct_pred[i][j] != True):
                             acc -= 1
                             break
-
-                print('Average loss at step {}: {:5.6f}, Accuracy = {}'.format(index + 1, total_loss / skip_step, acc))
+                acc_of_numbers = sess.run(model.accuracy, feed_dict={model.X: batch_x_test, model.Y: batch_y_test, model.dropout: 1.})
+                print('Average loss at step {}: {:5.6f}, Accuracy = {} Accuracy of numbers = {}'.format(index + 1, total_loss/skip_step, acc / Test_batch_size, acc_of_numbers))
                 total_loss = 0.0
 
         print("Optimization Finished!")  # should be around 0.35 after 25 epochs
