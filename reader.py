@@ -173,7 +173,7 @@ class dongzj:
         x = [0 for i in range(self.mwidth * self.mheight)]
         for i in range(self.mheight):
             for j in range(self.mwidth):
-                x[i*width+j] = T.img.getpixel((j,i))
+                x[i*self.mwidth+j] = T.img.getpixel((j,i))
 
         size = 0
         if flags == "FULL":
