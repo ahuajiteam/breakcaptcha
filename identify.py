@@ -64,7 +64,7 @@ class CNN:
         self.output = tf.add(tf.matmul(dense, w_out), b_out)
 
         self.loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.output, labels=self.Y))
-        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.loss, global_step=self.global_step)
 
         self.predict = tf.reshape(self.output, [-1, self.n_length, self.n_classes])
         max_idx_p = tf.argmax(self.predict, 2)
