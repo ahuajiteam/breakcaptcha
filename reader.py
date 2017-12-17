@@ -87,6 +87,7 @@ class PngMat:
     height = -1
     img = 0
     plaintext= ""
+    x = []
     def __init__(self, width = -1, height = -1):
         self.width = width
         self.height = height
@@ -96,10 +97,26 @@ class PngReader():
     filepath = ""
     filelist = []
     imglist = []
+    xlist = []
+
     mwidth = 0
     mheight = 0
     total = 0
     index = 0
+    def imagesolve(self, filepath):
+        img = Image.open(filepath)
+        # img = ClearNoise.pre_image(img) #image_denoising
+        img = img.resize((self.mwidth, self.mheight))
+        img = image_binarize(img)
+        return img
+
+    def imagetovec(self, img):
+        x = [0 for i in range(self.mwidth * self.mheight)]
+        for i in range(self.mheight):
+            for j in range(self.mwidth):
+                x[i*self.mwidth+j] = img.getpixel((j,i))
+        return x
+
     def __init__(self, path, width, height):
         if path[len(path)-1] == '/':
             self.filepath = path
@@ -116,11 +133,10 @@ class PngReader():
             if allDir.endswith(".png"):
                 self.total = self.total + 1
                 self.filelist.append(allDir)
-                img = Image.open(self.filepath + allDir)
-                # img = ClearNoise.pre_image(img) #image_denoising
-                img = img.resize((width, height))
-                img = image_binarize(img)
+                img = self.imagesolve(self.filepath + allDir)
+                x = self.imagetovec(img)
                 self.imglist.append(img)
+                self.xlist.append(x)
                 #child = os.path.join('%s%s' % (self.filepath, allDir))
                 #print(child)
 
@@ -138,6 +154,7 @@ class PngReader():
         T.width = self.mwidth
         T.height = self.mheight
         T.img = self.imglist[i]
+        T.x = self.xlist[i]
         T.plaintext = self.filelist[i][-8:-4]#.png
         return T
 
@@ -170,10 +187,7 @@ class dongzj:
         T = self.mreader.get(idx)
         #print(T.plaintext)
         #print("----------------------")
-        x = [0 for i in range(self.mwidth * self.mheight)]
-        for i in range(self.mheight):
-            for j in range(self.mwidth):
-                x[i*self.mwidth+j] = T.img.getpixel((j,i))
+        x = T.x
 
         size = 0
         if flags == "FULL":
