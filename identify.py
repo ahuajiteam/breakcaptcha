@@ -9,9 +9,10 @@ N_CLASSES = 10
 LEARNING_RATE = 0.001
 BATCH_SIZE = 128
 SKIP_STEP = 100
-N_EPOCHS = 100
+MAX_STEP = 4000
 HEIGHT = 80
 WIDTH = 120
+TEST_BATCH_SIZE = 200
 TrainingDataPath = r'Data/num_nonoise_data' #modify here
 TestingDataPath = r'Data/num_nonoise_data_test' #modify here
 # import utils
@@ -73,9 +74,8 @@ class CNN:
         self.accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 
-def train_model(model, data_path, batch_size=BATCH_SIZE, n_epochs=N_EPOCHS, skip_step=SKIP_STEP):
-    input = reader.ReadAll(data_path, model.width, model.height) 
-    batch_size = min(batch_size, input.total_numbers)
+def train_model(model, batch_size=BATCH_SIZE, Test_batch_size=TEST_BATCH_SIZE, skip_step=SKIP_STEP, max_step=MAX_STEP):
+    input = reader.ReadAll(model.width, model.height) 
     if (os.path.exists(model.ckptdir) == False):
         os.makedirs(model.ckptdir)
     with tf.Session() as sess:
@@ -88,67 +88,39 @@ def train_model(model, data_path, batch_size=BATCH_SIZE, n_epochs=N_EPOCHS, skip
 
         initial_step = model.global_step.eval()
         start_time = time.time()
-        n_batches = int(input.total_numbers / batch_size)  
         total_loss = 0
 
-        print ('total_numbers = {}'.format(input.total_numbers))
         # print (initial_step)
 
-        for i in range(initial_step, n_batches * n_epochs):
-            X_batch, Y_batch = input.getbatch(i, batch_size, "ONLY_NUMBERS")
+        for index in range(initial_step, max_step):
+            X_batch, Y_batch = input.get(batch_size, "ONLY_NUMBERS")
             _, loss_batch = sess.run([model.optimizer, model.loss],
                                      feed_dict={model.X: X_batch, model.Y: Y_batch, model.dropout: model.DROPOUT})
             total_loss += loss_batch
-            print('loss at step {}: {:5.6f}'.format(i + 1, loss_batch))
+            print('loss at step {}: {:5.6f}'.format(index + 1, loss_batch))
 
-            if (i + 1) % skip_step == 0:
-                batch_x_test, batch_y_test = input.getbatch(i + 1, min(100, input.total_numbers), "ONLY_NUMBERS")
-                acc = sess.run(model.accuracy, feed_dict={model.X: batch_x_test, model.Y: batch_y_test, model.dropout: 1.})
-                print('Average loss at step {}: {:5.6f}, Accuracy of all numbers = {}'.format(i + 1, total_loss / skip_step, acc))
+            if (index + 1) % skip_step == 0:
+                saver.save(sess, model.ckptdir + '/identify-convnet', index)
+
+                acc = 0
+                batch_x_test, batch_y_test = input.get(Test_batch_size, "ONLY_NUMBERS")
+                preds = sess.run(model.output, feed_dict={model.X: batch_x_test, model.Y: batch_y_test, model.dropout: 1.0})
+                preds = tf.argmax(tf.reshape(preds, [-1, model.n_length, model.n_classes]), 2)
+                y = tf.argmax(tf.reshape(batch_y_test, [-1, model.n_length, model.n_classes]), 2)
+                correct_pred = tf.equal(y, preds).eval()
+                print (correct_pred)
+                for i in range(Test_batch_size):
+                    acc += 1
+                    for j in range(4):
+                        if (correct_pred[i][j] != True):
+                            acc -= 1
+                            break
+
+                print('Average loss at step {}: {:5.6f}, Accuracy = {}'.format(index + 1, total_loss / skip_step, acc))
                 total_loss = 0.0
-                saver.save(sess, model.ckptdir + '/identify-convnet', i)
-                # if (acc > 0.95):
-                #     break 
 
         print("Optimization Finished!")  # should be around 0.35 after 25 epochs
         print("Total time: {0} seconds".format(time.time() - start_time))
-
-def test_model(model, data_path):
-    input = reader.ReadAll(data_path, model.width, model.height) 
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        saver = tf.train.Saver()
-        ckpt = tf.train.get_checkpoint_state(os.path.dirname(model.ckptdir + '/checkpoint'))
-        if ckpt and ckpt.model_checkpoint_path:
-            saver.restore(sess, ckpt.model_checkpoint_path)
-        else:
-            print ("checkpoint not found")
-            exit(1)
-
-        Test_batch_size = min(input.total_numbers, 100)
-        if (input.total_numbers % Test_batch_size != 0):
-            print ("some of the data are not tested")
-
-        acc = 0
-        max_index = int(input.total_numbers / Test_batch_size)
-        for index in range(max_index):
-            batch_x_test, batch_y_test = input.getbatch(index, Test_batch_size, "ONLY_NUMBERS")
-            preds = sess.run(model.output, feed_dict={model.X: batch_x_test, model.Y: batch_y_test, model.dropout: 1.0})
-
-            preds = tf.argmax(tf.reshape(preds, [-1, model.n_length, model.n_classes]), 2)
-            y = tf.argmax(tf.reshape(batch_y_test, [-1, model.n_length, model.n_classes]), 2)
-            correct_pred = tf.equal(y, preds).eval()
-            # print (correct_pred)
-            
-            for i in range(Test_batch_size):
-                acc += 1
-                for j in range(4):
-                    if (correct_pred[i][j] != True):
-                        acc -= 1
-                        break
-
-        print ('total_numbers = {}'.format((max_index * Test_batch_size)))
-        print("Accuracy on {} {:5.6f}".format(data_path, acc / (max_index * Test_batch_size)))    
 
 # def test_one(X):
 #     model = CNN(N_CLASSES, LEARNING_RATE, HEIGHT, WIDTH)
@@ -172,7 +144,4 @@ def test_model(model, data_path):
 
 if __name__ == '__main__':
     model = CNN(N_CLASSES, LEARNING_RATE, HEIGHT, WIDTH)
-    # train_model(model, TrainingDataPath)
-    test_model(model, TestingDataPath)
-    test_model(model, TrainingDataPath)
-    test_model(model, TestingDataPath)
+    train_model(model, 5, 5)
