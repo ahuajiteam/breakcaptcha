@@ -24,7 +24,7 @@
 import matplotlib.pyplot as plt
 from PIL import Image
 import os
-import generator
+
 import ClearNoise
 
 
@@ -82,24 +82,92 @@ def image_binarize(img):
     #img = img.convert('RGB')
     return img
 
+class PngMat:
+    width = -1
+    height = -1
+    img = 0
+    plaintext= ""
+    x = []
+    def __init__(self, width = -1, height = -1):
+        self.width = width
+        self.height = height
 
-def imagesolve(img, width, height):
-    img = img.resize((width, height))
-    img = image_binarize(img)
-    return img
 
-def imagetovec(img, width, height):
-    x = [0 for i in range(width * height)]
-    for i in range(height):
-        for j in range(width):
-            x[i*width+j] = img.getpixel((j,i))
-    return x
+class PngReader():
+    filepath = ""
+    filelist = []
+    imglist = []
+    xlist = []
+
+    mwidth = 0
+    mheight = 0
+    total = 0
+    index = 0
+    def imagesolve(self, filepath):
+        img = Image.open(filepath)
+        # img = ClearNoise.pre_image(img) #image_denoising
+        img = img.resize((self.mwidth, self.mheight))
+        img = image_binarize(img)
+        return img
+
+    def imagetovec(self, img):
+        x = [0 for i in range(self.mwidth * self.mheight)]
+        for i in range(self.mheight):
+            for j in range(self.mwidth):
+                x[i*self.mwidth+j] = img.getpixel((j,i))
+        return x
+
+    def __init__(self, path, width, height):
+        if path[len(path)-1] == '/':
+            self.filepath = path
+        else:
+            self.filepath = path + '/'
+        self.filelist.clear()
+        self.total = 0
+        self.index = 0
+        self.mwidth = width
+        self.mheight = height
+
+        dirs = os.listdir(path)
+        for allDir in dirs:
+            if allDir.endswith(".png"):
+                self.total = self.total + 1
+                img = self.imagesolve(self.filepath + allDir)
+                x = self.imagetovec(img)
+                self.xlist.append(x)
+                self.imglist.append(img)
+                self.filelist.append(allDir)
+                #child = os.path.join('%s%s' % (self.filepath, allDir))
+                #print(child)
+
+        if self.total == 0:
+            print("no png found...\n")
+        print("png read finished..")
+    def empty(self):
+        return self.index == self.total
+
+    def get(self, i):
+        if i >= self.total:
+            i = i % self.total
+        T = PngMat()
+        #print(path)
+        T.width = self.mwidth
+        T.height = self.mheight
+        T.img = self.imglist[i]
+        T.x = self.xlist[i]
+        T.plaintext = self.filelist[i][-8:-4]#.png
+        return T
+
 
 class dongzj:
+    total_numbers = 0
+    mreader = 0
     mwidth = 0
     mheight = 0
     table = {}
-    def __init__(self, width, height):
+    def __init__(self, path, width, height):
+        self.mreader = PngReader(path, width, height)
+        self.total_numbers = self.mreader.total
         self.mwidth = width
         self.mheight = height
         # make a offset table
@@ -113,26 +181,36 @@ class dongzj:
         for i in range(ord('a'), ord('z')+1):
             self.table[i] = cnt
             cnt = cnt + 1
-    def get(self, size, flags="FULL"):
-        img, codes = generator.getimgs(size)
-        x = []
-        y = []
-        for i in range(size):
-            x.append(imagetovec(imagesolve(img[i], self.mwidth, self.mheight), self.mwidth, self.mheight))
-            size = 0
-            if flags == "FULL":
-                size = 10+26*2
-            if flags == "ONLY_NUMBERS":
-                size = 10
-            sy = [0 for t in range(4*size)]
-            for t in range(4):
-                charact = codes[i][t]
-                offset = self.table[ord(charact)]
-                sy[t * size + offset] = 1
-            y.append(sy)
+    def getone(self, idx, flags="FULL"):
+        if idx >= self.total_numbers:
+            id = idx % self.total_numbers
+        T = self.mreader.get(idx)
+        #print(T.plaintext)
+        #print("----------------------")
+        x = T.x
+
+        size = 0
+        if flags == "FULL":
+            size = 10+26*2
+        if flags == "ONLY_NUMBERS":
+            size = 10
+        y = [0 for i in range(4*size)]
+        for i in range(4):
+            charact = T.plaintext[i]
+            offset = self.table[ord(charact)]
+            y[i * size + offset] = 1
 
         return x, y
 
+    def getbatch(self, id, BATCH_SIZE, flags="FULL"):
+        x = [[] for i in range(BATCH_SIZE)]
+        y = [[] for i in range(BATCH_SIZE)]
+        id = id * BATCH_SIZE
+        for i in range(0, BATCH_SIZE):
+            id = id % self.total_numbers
+            x[i], y[i] = self.getone(id, flags)
+            id = id + 1
+        return x, y
 
 def showImg(imglist, codelist, flags, width = 64, height = 40):
     img = Image.new('RGB', (width, height))
@@ -161,15 +239,16 @@ def showImg(imglist, codelist, flags, width = 64, height = 40):
     plt.imshow(img)
     plt.show()
 
-def ReadAll(width, height):
-    res = dongzj(width, height)
+def ReadAll(path, width, height):
+    res = dongzj(path, width, height)
     return res
 # usage example:
 if __name__ == '__main__':
     width = 120
     height = 80
-    input = ReadAll(width, height)
-    x, y = input.get(10, "FULL")
+    input = ReadAll("./Data/num_nonoise_data_test", width, height)
+    x, y = input.getbatch(3, 30, "FULL")
+    print(input.total_numbers)
     print(y[0])
     for i in range(4):
         showImg(x[i], y[i], "FULL", width, height)

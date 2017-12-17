@@ -70,38 +70,25 @@ def add_noise_curve(img, color=-1):
     color = random.randint(0, 0xffffff)
     generator.create_noise_curve(img, color)
 
-def getimgs(number = 200):
-    imgs = []
-    codes = []
-    for num in range(0, number):
-        random_str = ''
-        for i in range(0, 4):
-            random_str += random_char()
-        img = generator.generate_image(random_str)
-        imgs.append(img)
-        codes.append(random_str)
-    return imgs, codes
 #-----------------------------now we go to generate a captcha------------------------------------
 #------------------------------------------------------------------------------------------------
 # random_str is the captcha's plaintext
+number = 500
+for num in range(0, number):
+    random_str = ''
+    for i in range(0, 4):
+        random_str += random_char()
+    #random_str = "1liI"
+    #generator.create_captcha_image(characters)
+    #img = generator.create_captcha_image(random_str, 0xffffff, 0x0)
+    img = generator.generate_image(random_str)
+    #color = random.randint(0, 0xffffff)
+    #for i in range(1, 5):
+    #    add_noise_dots(img, color)
 
-if __name__ == '__main__':
-    number = 500
-    for num in range(0, number):
-        random_str = ''
-        for i in range(0, 4):
-            random_str += random_char()
-        #random_str = "1liI"
-        #generator.create_captcha_image(characters)
-        #img = generator.create_captcha_image(random_str, 0xffffff, 0x0)
-        img = generator.generate_image(random_str)
-        #color = random.randint(0, 0xffffff)
-        #for i in range(1, 5):
-        #    add_noise_dots(img, color)
-
-        #img.save("./num_nonoise_data_test/"+str(num)+random_str+'.png', format='png')
-        plt.title(random_str)
-        plt.imshow(img)
-        plt.show()
-        #plt.savefig("./sdata/"+random_str+str(num), format='png', dpi=300)
-        #plt.clf()
+    img.save("./num_nonoise_data_test/"+str(num)+random_str+'.png', format='png')
+    #plt.title(random_str)
+    #plt.imshow(img)
+    #plt.show()
+    #plt.savefig("./sdata/"+random_str+str(num), format='png', dpi=300)
+    #plt.clf()
