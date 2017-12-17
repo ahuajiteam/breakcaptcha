@@ -14,7 +14,7 @@ HEIGHT = 80
 WIDTH = 120
 TrainingDataPath = r'Data/num_nonoise_data' #modify here
 TestingDataPath = r'Data/num_nonoise_data_test' #modify here
-import utils
+# import utils
 
 class CNN:
     def __init__(self, n_classes, lr, height, width):
