@@ -12,12 +12,6 @@ import numpy as np
 import random
 import string
 
-
-# the next two lines is what
-#%matplotlib inline
-#%config InlineBackend.figure_format = 'retina'
-
-
 # probability: a dictionary that record the occurrence probability of every character
 probability = {}
 # characters: a string that serve as a set of candidate character
@@ -48,7 +42,7 @@ for i in range(1, n_class):
 # calculate the occurrence probability
 for i in range(0, n_class):
     probability[characters[i]] /= probability[characters[n_class-1]]
-print(probability)
+#print(probability)
 #------------------------------------------------------------------------------------------------
 
 # random_char: generate a character randomly according to the probability & characters
@@ -86,22 +80,10 @@ def getimgs(number = 200):
 # random_str is the captcha's plaintext
 
 if __name__ == '__main__':
-    number = 500
-    for num in range(0, number):
-        random_str = ''
-        for i in range(0, 4):
-            random_str += random_char()
-        #random_str = "1liI"
-        #generator.create_captcha_image(characters)
-        #img = generator.create_captcha_image(random_str, 0xffffff, 0x0)
-        img = generator.generate_image(random_str)
-        #color = random.randint(0, 0xffffff)
-        #for i in range(1, 5):
-        #    add_noise_dots(img, color)
-
-        #img.save("./num_nonoise_data_test/"+str(num)+random_str+'.png', format='png')
-        plt.title(random_str)
-        plt.imshow(img)
-        plt.show()
-        #plt.savefig("./sdata/"+random_str+str(num), format='png', dpi=300)
-        #plt.clf()
+    number = 100
+    imgs, codes = getimgs(number)
+    plt.title(codes[0])
+    plt.imshow(imgs[0])
+    plt.show()
+    #plt.savefig("./sdata/"+random_str+str(num), format='png', dpi=300)
+    #plt.clf()
