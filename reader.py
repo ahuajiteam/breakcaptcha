@@ -65,8 +65,9 @@ def image_binarize(img):
 
 # imagesolve: input img, width, height
 # return a (width, height) img which is binarized
-def imagesolve(img, width, height):
-    #img = ClearNoise.pre_image(img)
+def imagesolve(img, width, height, flags = "NO_CLEAR_NOISE"):
+    if flags == "CLEAR_NOISE":
+        img = ClearNoise.pre_image(img)
     img = img.resize((width, height))
     img = image_binarize(img)
     return img
@@ -154,9 +155,20 @@ def showImg(imglist, codelist, flags, width = 64, height = 40):
 def ReadAll(width, height):
     res = dongzj(width, height)
     return res
+# a function that get x-vector from file.
+def GetFromFile(path, width, height):
+    img = Image.open(path)
+    img.resize((120, 80))
+    img = imagesolve(img, width, height)
+    img = imagetovec(img, width, height)
+    return img
 
 # usage example:
 if __name__ == '__main__':
+    x = GetFromFile("./Data/0yQPp.png", 120, 80)
+    y = [ 0 for i in range(66)]
+    showImg(x, y, "ONLY_NUMBERS", 120, 80)
+    """
     width = 120
     height = 80
     input = ReadAll(width, height)
@@ -164,4 +176,5 @@ if __name__ == '__main__':
     print(y[0])
     for i in range(4):
         showImg(x[i], y[i], "FULL", width, height)
+    """
 #usage over
